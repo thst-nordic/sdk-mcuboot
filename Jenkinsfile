@@ -79,8 +79,8 @@ pipeline {
           script {
             def BUILD_TYPE = lib_Main.getBuildType(CI_STATE.MCUBOOT)
             if (BUILD_TYPE == "PR") {
-              COMMIT_RANGE = "$CI_STATE.NRF.MERGE_BASE..$CI_STATE.NRF.REPORT_SHA"
-              COMPLIANCE_ARGS = "$COMPLIANCE_ARGS -p $CHANGE_ID -S $CI_STATE.NRF.REPORT_SHA -g"
+              COMMIT_RANGE = "$CI_STATE.MCUBOOT.MERGE_BASE..$CI_STATE.MCUBOOT.REPORT_SHA"
+              COMPLIANCE_ARGS = "$COMPLIANCE_ARGS -p $CHANGE_ID -S $CI_STATE.MCUBOOT.REPORT_SHA -g"
               println "Building a PR [$CHANGE_ID]: $COMMIT_RANGE"
             }
             else if (BUILD_TYPE == "TAG") {
