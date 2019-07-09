@@ -120,7 +120,6 @@ pipeline {
         script {
           CI_STATE.MCUBOOT.WAITING = true
           def DOWNSTREAM_JOBS = lib_Main.getDownStreamJobs(CI_STATE, 'MCUBOOT')
-          println "DOWNSTREAM_JOBS = " + DOWNSTREAM_JOBS
           def jobs = [:]
           DOWNSTREAM_JOBS.each {
             jobs["${it}"] = {
