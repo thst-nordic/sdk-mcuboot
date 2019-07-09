@@ -43,6 +43,7 @@ pipeline {
           lib_State.store('MCUBOOT', CI_STATE)
           lib_State.getParentJob(CI_STATE)
           lib_State.pushjobStack('MCUBOOT', CI_STATE)
+
           println "CI_STATE = $CI_STATE"
         }
       }
@@ -51,9 +52,10 @@ pipeline {
       when { expression {  true || CI_STATE.MCUBOOT.RUN_TESTS || CI_STATE.MCUBOOT.RUN_BUILD } }
       steps {
         script {
-          CI_STATE.MCUBOOT.REPORT_SHA = lib_Main.checkoutRepo(CI_STATE.MCUBOOT.GIT_URL, "zephyr", CI_STATE, false)
+          CI_STATE.MCUBOOT.REPORT_SHA = lib_Main.checkoutRepo(CI_STATE.MCUBOOT.GIT_URL, "mcuboot", CI_STATE, false)
           println "CI_STATE.MCUBOOT.REPORT_SHA = " + CI_STATE.MCUBOOT.REPORT_SHA
-          lib_West.InitUpdate('zephyr')
+          lib_West.InitUpdate('mcuboot')
+          lib_West.AddManifestUpdate("MCUBOOT", 'mcuboot', CI_STATE.MCUBOOT.GIT_URL, CI_STATE.MCUBOOT.REPORT_SHA, CI_STATE)
         }
       }
     }
@@ -106,7 +108,6 @@ pipeline {
           CI_STATE.MCUBOOT.WAITING = true
           def DOWNSTREAM_JOBS = lib_Main.getDownStreamJobs(CI_STATE, 'MCUBOOT')
           println "DOWNSTREAM_JOBS = " + DOWNSTREAM_JOBS
-          lib_West.AddManifestUpdate("MCUBOOT", 'mcuboot', CI_STATE.MCUBOOT.GIT_URL, CI_STATE.MCUBOOT.REPORT_SHA, CI_STATE)
           def jobs = [:]
           DOWNSTREAM_JOBS.each {
             jobs["${it}"] = {
