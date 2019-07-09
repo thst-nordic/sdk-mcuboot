@@ -30,6 +30,7 @@ pipeline {
       // This token is used to by check_compliance to comment on PRs and use checks
       GH_TOKEN = credentials('nordicbuilder-compliance-token')
       GH_USERNAME = "NordicBuilder"
+      SOURCE_ZEPHYR_ENV = "source ../zephyr/zephyr-env.sh"
       COMPLIANCE_SCRIPT_PATH = "../ci-tools/scripts/check_compliance.py"
       COMPLIANCE_ARGS = "-r NordicPlayground/fw-nrfconnect-mcuboot"
       COMPLIANCE_REPORT_ARGS = "-p $CHANGE_ID -S $GIT_COMMIT -g"
@@ -76,18 +77,30 @@ pipeline {
       steps {
         dir('mcuboot') {
           script {
-            // If we're a pull request, compare the target branch against the current HEAD (the PR)
-            if (env.CHANGE_TARGET) {
-              COMMIT_RANGE = "origin/${env.CHANGE_TARGET}..HEAD"
-              COMPLIANCE_ARGS = "$COMPLIANCE_ARGS $COMPLIANCE_REPORT_ARGS"
+            def BUILD_TYPE = lib_Main.getBuildType(CI_STATE.MCUBOOT)
+            if (BUILD_TYPE == "PR") {
+              COMMIT_RANGE = "$CI_STATE.NRF.MERGE_BASE..$CI_STATE.NRF.REPORT_SHA"
+              COMPLIANCE_ARGS = "$COMPLIANCE_ARGS -p $CHANGE_ID -S $CI_STATE.NRF.REPORT_SHA -g"
+              println "Building a PR [$CHANGE_ID]: $COMMIT_RANGE"
+            }
+            else if (BUILD_TYPE == "TAG") {
+              COMMIT_RANGE = "tags/${env.BRANCH_NAME}..tags/${env.BRANCH_NAME}"
+              println "Building a Tag: " + COMMIT_RANGE
             }
             // If not a PR, it's a non-PR-branch or master build. Compare against the origin.
-            else {
+            else if (BUILD_TYPE == "BRANCH") {
               COMMIT_RANGE = "origin/${env.BRANCH_NAME}..HEAD"
+              println "Building a Branch: " + COMMIT_RANGE
             }
+            else {
+                assert condition : "Build fails because it is not a PR/Tag/Branch"
+            }
+
             // Run the compliance check
             try {
-              sh "$COMPLIANCE_SCRIPT_PATH $COMPLIANCE_ARGS --commits $COMMIT_RANGE"
+              sh """($SOURCE_ZEPHYR_ENV &&
+                     $COMPLIANCE_SCRIPT_PATH $COMPLIANCE_ARGS --commits $COMMIT_RANGE)
+              """
             }
             finally {
               junit 'compliance.xml'
