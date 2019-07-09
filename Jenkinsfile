@@ -3,8 +3,6 @@
 
 def IMAGE_TAG = lib_Main.getDockerImage(JOB_NAME)
 def AGENT_LABELS = lib_Main.getAgentLabels(JOB_NAME)
-def REPO_CI_TOOLS = "https://github.com/zephyrproject-rtos/ci-tools.git"
-def REPO_CI_TOOLS_SHA = "bfe635f102271a4ad71c1a14824f9d5e64734e57"
 def CI_STATE = new HashMap()
 
 pipeline {
@@ -33,17 +31,12 @@ pipeline {
       steps {
         println "Using Node:$NODE_NAME and Input Parameters:$params"
         println "Input CI_STATE:${params['jsonstr_CI_STATE']}"
-        dir("ci-tools") {
-          git branch: "master", url: "$REPO_CI_TOOLS"
-          sh "git checkout ${REPO_CI_TOOLS_SHA}"
-        }
-
         script {
+          lib_State.getCItools(JOB_NAME)
           CI_STATE = lib_State.load(params['jsonstr_CI_STATE'])
           lib_State.store('MCUBOOT', CI_STATE)
           lib_State.getParentJob(CI_STATE)
           lib_State.pushjobStack('MCUBOOT', CI_STATE)
-
           println "CI_STATE = $CI_STATE"
         }
       }
