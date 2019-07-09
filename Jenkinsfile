@@ -40,7 +40,6 @@ pipeline {
         println "Using Node:$NODE_NAME and Input Parameters:$params"
         println "Input CI_STATE:${params['jsonstr_CI_STATE']}"
         script {
-          lib_State.getCItools(JOB_NAME)
           CI_STATE = lib_State.load(params['jsonstr_CI_STATE'])
           lib_State.store('MCUBOOT', CI_STATE)
           lib_State.getParentJob(CI_STATE)
@@ -53,6 +52,7 @@ pipeline {
       when { expression {  true || CI_STATE.MCUBOOT.RUN_TESTS || CI_STATE.MCUBOOT.RUN_BUILD } }
       steps {
         script {
+          lib_Main.getCItools(JOB_NAME)
           CI_STATE.MCUBOOT.REPORT_SHA = lib_Main.checkoutRepo(CI_STATE.MCUBOOT.GIT_URL, "mcuboot", CI_STATE, false)
           println "CI_STATE.MCUBOOT.REPORT_SHA = " + CI_STATE.MCUBOOT.REPORT_SHA
           lib_West.InitUpdate('mcuboot')
