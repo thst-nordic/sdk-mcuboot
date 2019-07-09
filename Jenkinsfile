@@ -98,9 +98,7 @@ pipeline {
 
             // Run the compliance check
             try {
-              sh """($SOURCE_ZEPHYR_ENV &&
-                     $COMPLIANCE_SCRIPT_PATH $COMPLIANCE_ARGS --commits $COMMIT_RANGE)
-              """
+              sh "$COMPLIANCE_SCRIPT_PATH $COMPLIANCE_ARGS --commits $COMMIT_RANGE"
             }
             finally {
               junit 'compliance.xml'
