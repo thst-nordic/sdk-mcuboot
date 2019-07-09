@@ -64,7 +64,7 @@ pipeline {
       when { expression { true || CI_STATE.MCUBOOT.RUN_TESTS || CI_STATE.MCUBOOT.RUN_BUILD } }
       steps {
         script {
-          println "If triggered by an upstream Project, use their changes."
+          println "If triggered by an upstream Project, apply their changes."
           lib_West.ApplyManfestUpdates(CI_STATE)
         }
       }
