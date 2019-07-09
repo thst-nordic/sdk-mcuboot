@@ -18,6 +18,7 @@ pipeline {
     docker {
       image IMAGE_TAG
       label AGENT_LABELS
+      args '-e PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/workdir/.local/bin'
     }
   }
   options {
