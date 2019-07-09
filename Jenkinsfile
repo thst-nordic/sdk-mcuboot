@@ -53,13 +53,14 @@ pipeline {
       steps {
         script {
           lib_Main.cloneCItools(JOB_NAME)
-          CI_STATE.MCUBOOT.REPORT_SHA = lib_Main.checkoutRepo(CI_STATE.MCUBOOT.GIT_URL, "mcuboot", CI_STATE, false)
+          CI_STATE.MCUBOOT.REPORT_SHA = lib_Main.checkoutRepo(CI_STATE.MCUBOOT.GIT_URL, "mcuboot", CI_STATE, true)
           println "CI_STATE.MCUBOOT.REPORT_SHA = " + CI_STATE.MCUBOOT.REPORT_SHA
-          lib_West.InitUpdate('mcuboot')
           lib_West.AddManifestUpdate("MCUBOOT", 'mcuboot', CI_STATE.MCUBOOT.GIT_URL, CI_STATE.MCUBOOT.REPORT_SHA, CI_STATE)
+          // lib_West.InitUpdate('nrf')
         }
       }
     }
+    /*
     stage('Apply Parent Manifest Updates') {
       when { expression { true || CI_STATE.MCUBOOT.RUN_TESTS || CI_STATE.MCUBOOT.RUN_BUILD } }
       steps {
@@ -69,7 +70,7 @@ pipeline {
         }
       }
     }
-
+    */
     stage('Run compliance check') {
       when { expression { CI_STATE.MCUBOOT.RUN_TESTS } }
       steps {
