@@ -52,7 +52,7 @@ pipeline {
       when { expression {  true || CI_STATE.MCUBOOT.RUN_TESTS || CI_STATE.MCUBOOT.RUN_BUILD } }
       steps {
         script {
-          lib_Main.getCItools(JOB_NAME)
+          lib_Main.cloneCItools(JOB_NAME)
           CI_STATE.MCUBOOT.REPORT_SHA = lib_Main.checkoutRepo(CI_STATE.MCUBOOT.GIT_URL, "mcuboot", CI_STATE, false)
           println "CI_STATE.MCUBOOT.REPORT_SHA = " + CI_STATE.MCUBOOT.REPORT_SHA
           lib_West.InitUpdate('mcuboot')
