@@ -37,9 +37,8 @@ pipeline {
   stages {
     stage('Load') {
       steps {
-        println "Using Node:$NODE_NAME and Input Parameters:$params"
-        println "Input CI_STATE:${params['jsonstr_CI_STATE']}"
         script {
+          lib_State.preLoad()
           CI_STATE = lib_State.load(params['jsonstr_CI_STATE'])
           lib_State.store('MCUBOOT', CI_STATE)
           lib_State.getParentJob(CI_STATE)
