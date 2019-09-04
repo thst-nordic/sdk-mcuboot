@@ -54,6 +54,7 @@ pipeline {
 
             if (CI_STATE.MCUBOOT.CHANGE_TITLE.toLowerCase().contains('[nrf mergeup]')) {
               COMPLIANCE_ARGS = "$COMPLIANCE_ARGS --exclude-module Gitlint"
+
             }
 
             def BUILD_TYPE = lib_Main.getBuildType(CI_STATE.MCUBOOT)
