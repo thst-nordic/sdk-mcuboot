@@ -1,11 +1,22 @@
+//
+// Copyright (c) 2018 Nordic Semiconductor ASA. All Rights Reserved.
+//
+// The information contained herein is confidential property of Nordic Semiconductor ASA.
+// The use, copying, transfer or disclosure of such information is prohibited except by
+// express written agreement with Nordic Semiconductor ASA.
+//
 
 @Library("CI_LIB") _
 
-def AGENT_LABELS = lib_Main.getAgentLabels(JOB_NAME)
-def IMAGE_TAG    = lib_Main.getDockerImage(JOB_NAME)
-def TIMEOUT      = lib_Main.getTimeout(JOB_NAME)
-def INPUT_STATE  = lib_Main.getInputState(JOB_NAME)
-def CI_STATE = new HashMap()
+HashMap CI_STATE = lib_State.getConfig(JOB_NAME)
+
+properties([
+  pipelineTriggers([
+    parameterizedCron((JOB_NAME =~ /latest\/night\/.*\/master/).find() ? CI_STATE.CFG.CRON.NIGHTLY : ''),
+    parameterizedCron((JOB_NAME =~ /latest\/week\/.*\/master/).find() ? CI_STATE.CFG.CRON.WEEKLY : ''),
+  ]),
+  ( JOB_NAME.contains('sub/') ? disableResume() :  disableConcurrentBuilds() )
+])
 
 pipeline {
 
@@ -13,24 +24,21 @@ pipeline {
    booleanParam(name: 'RUN_DOWNSTREAM', description: 'if false skip downstream jobs', defaultValue: false)
    booleanParam(name: 'RUN_TESTS', description: 'if false skip testing', defaultValue: true)
    booleanParam(name: 'RUN_BUILD', description: 'if false skip building', defaultValue: true)
-   string(name: 'jsonstr_CI_STATE', description: 'Default State if no upstream job', defaultValue: INPUT_STATE)
-  }
-
-  triggers {
-    cron(env.BRANCH_NAME == 'master' ? '0 */12 * * 1-6' : '') // Master branch will be build every 12 hours
+   string(      name: 'jsonstr_CI_STATE', description: 'Default State if no upstream job', defaultValue: CI_STATE.CFG.INPUT_STATE )
+    choice(      name: 'CRON', choices: ['COMMIT', 'NIGHTLY', 'WEEKLY'], description: 'Cron Test Phase')
   }
 
   agent {
     docker {
-      image IMAGE_TAG
-      label AGENT_LABELS
+      image CI_STATE.CFG.IMAGE_TAG
+      label CI_STATE.CFG.AGENT_LABELS
     }
   }
 
   options {
-    // Checkout the repository to this folder instead of root
     checkoutToSubdirectory('mcuboot')
-    timeout(time: TIMEOUT.time, unit: TIMEOUT.unit)
+    parallelsAlwaysFailFast()
+    timeout(time: CI_STATE.CFG.TIMEOUT.time, unit: CI_STATE.CFG.TIMEOUT.unit)
   }
 
   environment {
@@ -41,7 +49,7 @@ pipeline {
   }
 
   stages {
-    stage('Load') { steps { script { CI_STATE = lib_Stage.load('MCUBOOT') }}}
+    stage('Load') { steps { script { CI_STATE = lib_State.load('MCUBOOT', CI_STATE) }}}
     stage('Checkout') {
       steps { script {
         lib_Main.cloneCItools(JOB_NAME)
@@ -122,6 +130,7 @@ pipeline {
     // This is the order that the methods are run. {always->success/abort/failure/unstable->cleanup}
     always {
       echo "always"
+      script { if ( !CI_STATE.SELF.RUN_BUILD || !CI_STATE.SELF.RUN_TESTS ) { currentBuild.result = "UNSTABLE"}}
     }
     success {
       echo "success"
